@@ -1,0 +1,13 @@
+#!/bin/sh
+
+time_duhamel 4
+time_mayer 4
+time_r_mayer 4
+
+time_duhamel 128
+time_mayer 128
+time_r_mayer 128
+
+time_duhamel 32768
+time_mayer 32768
+time_r_mayer 32768

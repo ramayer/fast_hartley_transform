@@ -1,0 +1,56 @@
+
+This file contains a benchmark results of a number of popular FFT
+algorithms. The algorithms compared are:
+
+ FFT-numrec
+ The FFT from numerical recipies, converted to double precision
+ FFT-duhamel
+ A "duhamel-holman split radix fft" from "electronics letters,
+ jan. 5, 1994", coded by Dave Edelblute, edel...@cod.nosc.mil
+ FFT-wang
+ Singleton's arbitrary-radix FFT translated to C and coded by
+ John Wang, wa...@acuson.com
+ FFT-mayer
+ An original FFT by Ron Mayer (ma...@acuson.com)
+ real-FFT-numrec
+ The real valued FFT from numerical recipies, converted to
+ double precision.
+ real-FFT-mayer
+ An original real valued FFT by Ron Mayer (ma...@acuson.com)
+
+I compiled each of the programs using gcc 2.0 with the -O4 flag on a
+Sun Sparc 1; and timed (using the "clock()" function in SunOS) a
+number of iterations of forward and reverse transforms of a known data
+set. At the end of the iterations of forward and reverse transforms I
+compared the data with the original to check for accumulated errors.
+
+algorithm # of # of time errors
+ used iterations points
+n=4
+FFT-numrec (16386 4): 4466488 CPU us ;ssq errors 0.0
+FFT-duhamel (16386 4): 2016586 CPU us ;ssq errors 0.0
+FFT-wang (16386 4): 3299868 CPU us ;ssq errors 0.0
+FFT-mayer (16386 4): 1333280 CPU us ;ssq errors 0.0
+real-FFT-numrec (16386 4): 3133208 CPU us ;ssq errors 0.0
+real-FFT-mayer (16386 4): 666640 CPU us ;ssq errors 0.0
+n=128
+FFT-numrec (514 128): 3883178 CPU us ;ssq errors 4.1e-21
+FFT-duhamel (514 128): 6349746 CPU us ;ssq errors 8.6e-22
+FFT-wang (514 128): 3866512 CPU us ;ssq errors 1.5e-09
+FFT-mayer (514 128): 2999880 CPU us ;ssq errors 6.9e-22
+real-FFT-numrec (514 128): 2333240 CPU us ;ssq errors 4.1e-21
+real-FFT-mayer (514 128): 1433276 CPU us ;ssq errors 6.9e-22
+n=2048
+FFT-numrec (34 2048): 5733104 CPU us ;ssq errors 8.6e-19
+FFT-duhamel (34 2048): 8849646 CPU us ;ssq errors 3.2e-20
+FFT-wang (34 2048): 5783102 CPU us ;ssq errors 2.2e-08
+FFT-mayer (34 2048): 4649814 CPU us ;ssq errors 9.4e-20
+real-FFT-numrec (34 2048): 3116542 CPU us ;ssq errors 1.6e-18
+real-FFT-mayer (34 2048): 2183246 CPU us ;ssq errors 9.4e-20
+n=32768
+FFT-numrec (4 32768): 18732584 CPU us ;ssq errors 1.5e-16
+FFT-duhamel (4 32768): 22632428 CPU us ;ssq errors 3.7e-18
+FFT-wang (4 32768): 16299348 CPU us ;ssq errors 1.1e-06
+FFT-mayer (4 32768): 13849446 CPU us ;ssq errors 1.2e-17
+real-FFT-numrec (4 32768): 9999600 CPU us ;ssq errors 1.9e-16
+real-FFT-mayer (4 32768): 6716398 CPU us ;ssq errors 1.2e-17
