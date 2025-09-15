@@ -1,30 +1,99 @@
 # FHT (Fast Hartley Transform)
 
-## Summary
-
-* The most popular Fast Hartley Transform.
-
-  * Found in 
+* This implementation can be found in 
 [Android](https://android.googlesource.com/platform/external/lame/+/c4cbe47910d2ece1617411206c6b5e4ffbe09360/libmp3lame/fft.c), 
 [Panasonic televisions](https://archive.is/wip/FzpDv), 
 [Siemens products](https://web.archive.org/web/20220123020714/https://assets.new.siemens.com/siemens/assets/api/uuid:ad102b2b-94d6-4cf8-bd60-73b8647dc689/readme-for-3rd-party-software-oss-mns.pdf), [LLVM's test suite](https://github.com/llvm/llvm-test-suite/blob/release/3.2.x/MultiSource/Benchmarks/MiBench/consumer-lame/fft.c), and popular numerical libraries like [UCSD PureData](https://github.com/pure-data/pure-data/blob/0.41-0test06/src/d_fft_mayer.c), [the fxt c++ library](https://github.com/mpoullet/fxt/blob/master/src/fht/fhtmayer.txt), the [Woolz Image Processing package](https://github.com/ma-tech/Woolz/blob/5ab012fff0fb50186d6ea8508f0d8b3063c45dc3/libAlg/AlgFourier.c#L4).
 
+
+## Why It’s Important
+
+The **Fast Hartley Transform (FHT)** is a close cousin of the Fast Fourier Transform (FFT), designed specifically for **real-valued input signals** (such as audio, sensor data, or images).  
+
+Unlike FFTs—which produce complex numbers—the Hartley Transform uses only real values (`cos(x) + sin(x)`).  
+This yields several key advantages:
+
+* ⚡ **Better cache locality:** operates on a single real-valued array, improving instruction/data cache usage on CPUs with small on-chip caches.  
+* 💾 **Lower memory footprint:** avoids storing and shuffling separate real and imaginary arrays.  
+* 🧮 **Simplicity:** more straightforward than real-FFTs or DCTs, thanks to built-in symmetry and a compact implementation.  
+* 🖩 **No dependency on fast trig hardware:** optionally uses a small `O(log n)` lookup table and stable on-the-fly recurrence to avoid costly `sin()`/`cos()` calls—especially useful on older embedded CPUs or microcontrollers with limited floating-point precision.
+
+Because of these tradeoffs, this tiny FHT implementation I wrote as a college project became widely adopted over the decades in MP3 encoders, embedded devices, and numerical libraries.
+
+---
+
+## Summary
+
+This implementation has quietly become one of the **most widely used Fast Hartley Transforms**, and appears in:
+
+* **Android** ([source](https://android.googlesource.com/platform/external/lame/+/c4cbe47910d2ece1617411206c6b5e4ffbe09360/libmp3lame/fft.c))  
+* **Panasonic televisions** ([source](https://contents.oss-src-distribution.panasonic.com/oss/tv/JPDTV18/liblame.html))  
+* **Siemens products** ([source](https://assets.new.siemens.com/siemens/assets/api/uuid:ad102b2b-94d6-4cf8-bd60-73b8647dc689/readme-for-3rd-party-software-oss-mns.pdf))  
+* **LLVM’s test suite** ([source](https://github.com/llvm/llvm-test-suite/blob/release/3.2.x/MultiSource/Benchmarks/MiBench/consumer-lame/fft.c))  
+* **UCSD PureData**, the **fxt C++ math library**, the **Woolz Image Processing package**, and dozens more open source projects
+
+---
+
 ## Background
 
-A Hartley Transform is similar to a Fourier Transform. Unlike the complex-values produced by a FFT with it's cos(x)+i*sin(x) kernel, the Hartley Transform uses a real-valued kernel cos(x)+sin(x).
+The **Hartley Transform** is mathematically similar to the **Fourier Transform**, except it avoids complex numbers by using the kernel:
 
-This can give it better memory-locality (for both instruction caches and data caches) on CPUs with limited sized data and instruction caches (when compared to traditional FFT implementations that work with both real and imaginary arrays).
-
-In addition, this algorhtm does not depend on fast sin() and cos() floating point instructions - optionally generating those values on the fly using a stable algorithm with a log(n) sized lookup table that preserves numerical accuracy even on embedded CPUs with reduced precision floating point math.
-
-These properties made the Fast Hartley Transform extremely well suited for older CPUs (that often had slow trig instructions) and embedded devices like MP3 players with strict memory constraints.
+     cas(x) = cos(x) + sin(x)
 
 
-## Original release
 
-* https://groups.google.com/g/comp.lang.c/c/Gs3APm2Dva0/m/GF7vVzIMAVsJ [archive1](https://archive.is/rIp4B), [archive2](https://web.archive.org/web/20240331052518/https://groups.google.com/g/comp.lang.c/c/Gs3APm2Dva0/m/GF7vVzIMAVsJ)
-* https://groups.google.com/g/comp.lang.c/c/t2IDPzA_mgM/m/xeE53C7LD6YJ [archive1](https://archive.is/dZzER)  [archive2](https://web.archive.org/web/20240331052750/https://groups.google.com/g/comp.lang.c/c/t2IDPzA_mgM/m/xeE53C7LD6YJ)
+This produces real-valued outputs and enables optimizations not possible with traditional FFTs. The FHT can be computed in `O(n log n)` time, like the FFT, but its single-array real-only design often runs **faster on real data**.
 
+---
+
+## Original Release
+
+* [comp.lang.c post (1993)](https://groups.google.com/g/comp.lang.c/c/Gs3APm2Dva0/m/GF7vVzIMAVsJ)  
+  ([archive1](https://archive.is/rIp4B) · [archive2](https://web.archive.org/web/20240331052518/https://groups.google.com/g/comp.lang.c/c/Gs3APm2Dva0/m/GF7vVzIMAVsJ))
+* [follow-up discussion](https://groups.google.com/g/comp.lang.c/c/t2IDPzA_mgM/m/xeE53C7LD6YJ)  
+  ([archive1](https://archive.is/dZzER) · [archive2](https://web.archive.org/web/20240331052750/https://groups.google.com/g/comp.lang.c/c/t2IDPzA_mgM/m/xeE53C7LD6YJ))
+
+---
+
+## Discussion and Analysis
+
+* [McGill “How fiddle~ Works” (2016)](https://www.music.mcgill.ca/~ich/classes/mumt621_11/final%20projects/final/Report.pdf) — describes this implementation  
+* [Performance evaluation of FFT routines](https://www.researchgate.net/publication/2936699_Performance_Evaluation_of_FFT_Routines_Machine_Independent_Serial_Programs)  
+* [citeseerx comparison](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=9389e68c437891c7fa51eeccef286a50afbbc033)  
+* [Stack Overflow discussion](https://stackoverflow.com/questions/16087290/ron-mayer-fft-convolution-algorithm)
+
+---
+
+## Historical Notes
+
+* Widely circulated on Usenet starting in 1993  
+* Incorporated in MP3 encoders, PureData, and DSP libraries through the 1990s–2000s  
+* Mentioned in patent debates:  
+  * [Fedora legal list](https://lists.fedoraproject.org/pipermail/legal/2010-May/001272.html)  
+  * [Debian collab-qa](https://alioth-lists-archive.debian.net/pipermail/collab-qa-commits/2012-June/002266.html)  
+* Frequently “re-discovered” over the years ([example](https://news.ycombinator.com/item?id=27386319))
+
+---
+
+## License
+
+Originally released to the public domain via Usenet in 1993.
+
+---
+
+## Historical Timeline
+
+| Year | Event |
+|------|-------|
+| 1770s | Euler - probable inventor of the fourier transform. |
+| 1800s | Gauss - probable inventor of the FFT (fast fourier transform) - and used it on paper |
+| 1920s | Hartley - probable inventor of the hartley transform. |
+| 1983 | Bracewell implements a fast Hartley Transform |
+| 1984 | Bracewell [patents](https://patents.google.com/patent/US4646256A/fr) a Fast Hartley Transform  |
+| 1990s | this FHT implementation adopted in many image and signal processing libraries |
+| 2000s | Incorporated into mobile and embedded DSP systems |
+| 2010s | Used in Android audio stack for real-time processing |
+| Today | Still used as a lightweight real-valued FFT alternative |
 
 
 ## Forks and references. 
